@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">MossRock</string>
+
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="kitchen">Kitchen</string>
+    <string name="entry">Entry</string>
+    <string name="nuutti">Nuutti</string>
+</resources>
