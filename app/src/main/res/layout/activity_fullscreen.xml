@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:grid="http://schemas.android.com/apk/res-auto"
     android:background="#fff"
     tools:context=".FullscreenActivity">
 
@@ -12,61 +11,263 @@
         android:id="@+id/toggle_grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        grid:columnCount="3"
-        android:layout_weight="1">
+        app:rowCount="7"
+        app:columnCount="3"
+        app:alignmentMode="alignBounds">
 
         <ToggleButton
             android:id="@+id/kitchen"
             android:layout_width="wrap_content"
-            android:layout_height="104dp"
+            android:layout_height="wrap_content"
             android:background="@drawable/btn_border_on"
             android:padding="12dp"
             android:text="@string/kitchen"
             android:textOff="@string/kitchen"
             android:textOn="@string/kitchen"
             android:textSize="36sp"
-            grid:layout_columnWeight="1"
-            grid:layout_gravity="fill_horizontal"
             app:layout_column="0"
-            app:layout_row="0" />
+            app:layout_row="0"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="2"/>
 
         <ToggleButton
             android:id="@+id/entry"
             android:layout_width="wrap_content"
-            android:layout_height="107dp"
+            android:layout_height="wrap_content"
             android:background="@drawable/btn_border_on"
             android:text="@string/entry"
             android:textOff="@string/entry"
             android:textOn="@string/entry"
             android:textSize="36sp"
             app:layout_column="1"
-            app:layout_row="0" />
+            app:layout_row="0"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowSpan="2"/>
 
-        <LinearLayout
+        <ToggleButton
+            android:id="@+id/nuutti"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/nuutti"
+            android:textOff="@string/nuutti"
+            android:textOn="@string/nuutti"
+            android:textSize="36sp"
             app:layout_column="2"
-            app:layout_row="0">
+            app:layout_row="0"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
 
-            <ToggleButton
-                android:id="@+id/nuutti"
-                android:layout_width="164dp"
-                android:layout_height="wrap_content"
-                android:background="@drawable/btn_border_on"
-                android:text="@string/nuutti"
-                android:textOff="@string/nuutti"
-                android:textOn="@string/nuutti"
-                android:textSize="36sp" />
+        <SeekBar
+            android:id="@+id/nuutti_dim"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:max="10"
+            android:progress="3"
+            app:layout_column="2"
+            app:layout_row="1"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
 
-            <SeekBar
-                android:id="@+id/nuutti_dim"
-                style="@style/Widget.AppCompat.SeekBar.Discrete"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:max="10"
-                android:progress="3" />
-        </LinearLayout>
+        <ToggleButton
+            android:id="@+id/viggo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/viggo"
+            android:textOff="@string/viggo"
+            android:textOn="@string/viggo"
+            android:textSize="36sp"
+            app:layout_column="0"
+            app:layout_row="2"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowSpan="1"/>
+
+        <SeekBar
+            android:id="@+id/viggo_dim"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:max="10"
+            android:progress="3"
+            app:layout_column="0"
+            app:layout_row="3"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
+
+        <ToggleButton
+            android:id="@+id/hallway"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/hallway"
+            android:textOff="@string/hallway"
+            android:textOn="@string/hallway"
+            android:textSize="36sp"
+            app:layout_column="1"
+            app:layout_row="2"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowSpan="2"/>
+
+        <ToggleButton
+            android:id="@+id/venni"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/venni"
+            android:textOff="@string/venni"
+            android:textOn="@string/venni"
+            android:textSize="36sp"
+            app:layout_column="2"
+            app:layout_row="2"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
+
+
+        <SeekBar
+            android:id="@+id/venni_dim"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:max="10"
+            android:progress="3"
+            app:layout_column="2"
+            app:layout_row="3"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
+
+        <ToggleButton
+            android:id="@+id/balcony"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/balcony"
+            android:textOff="@string/balcony"
+            android:textOn="@string/balcony"
+            android:textSize="36sp"
+            app:layout_column="0"
+            app:layout_row="4"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
+
+
+        <SeekBar
+            android:id="@+id/balcony_dim"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:max="10"
+            android:progress="3"
+            app:layout_column="0"
+            app:layout_row="5"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
+
+        <ToggleButton
+            android:id="@+id/library"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/library"
+            android:textOff="@string/library"
+            android:textOn="@string/library"
+            android:textSize="36sp"
+            app:layout_column="1"
+            app:layout_row="4"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
+
+        <SeekBar
+            android:id="@+id/library_dim"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:max="10"
+            android:progress="3"
+            app:layout_column="1"
+            app:layout_row="5"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowWeight="1"
+            app:layout_rowSpan="1"/>
+
+        <ToggleButton
+            android:id="@+id/bedroom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/bedroom"
+            android:textOff="@string/bedroom"
+            android:textOn="@string/bedroom"
+            android:textSize="36sp"
+            app:layout_column="2"
+            app:layout_row="4"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowSpan="2"/>
+
+        <ToggleButton
+            android:id="@+id/all_on"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/all_on"
+            android:textOff="@string/all_on"
+            android:textOn="@string/all_on"
+            android:textSize="36sp"
+            app:layout_column="0"
+            app:layout_row="6"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowSpan="1"/>
+
+        <ToggleButton
+            android:id="@+id/all_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/all_off"
+            android:textOff="@string/all_off"
+            android:textOn="@string/all_off"
+            android:textSize="36sp"
+            app:layout_column="1"
+            app:layout_row="6"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowSpan="1"/>
+
+        <ToggleButton
+            android:id="@+id/movie"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_border_on"
+            android:text="@string/movie"
+            android:textOff="@string/movie"
+            android:textOn="@string/movie"
+            android:textSize="36sp"
+            app:layout_column="2"
+            app:layout_row="6"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            app:layout_gravity="fill_horizontal|fill_vertical"
+            app:layout_rowSpan="1"/>
+
     </android.support.v7.widget.GridLayout>
-
 </FrameLayout>

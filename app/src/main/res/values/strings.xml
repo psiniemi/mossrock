@@ -6,4 +6,13 @@
     <string name="kitchen">Kitchen</string>
     <string name="entry">Entry</string>
     <string name="nuutti">Nuutti</string>
+    <string name="viggo">Viggo</string>
+    <string name="hallway">Hallway</string>
+    <string name="venni">Venni</string>
+    <string name="balcony">Balcony</string>
+    <string name="library">Library</string>
+    <string name="bedroom">Bedroom</string>
+    <string name="all_on">All On</string>
+    <string name="all_off">All Off</string>
+    <string name="movie">Movie</string>
 </resources>
