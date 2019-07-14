@@ -221,14 +221,12 @@
             app:layout_gravity="fill_horizontal|fill_vertical"
             app:layout_rowSpan="2"/>
 
-        <ToggleButton
+        <Button
             android:id="@+id/all_on"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/btn_border_on"
             android:text="@string/all_on"
-            android:textOff="@string/all_on"
-            android:textOn="@string/all_on"
             android:textSize="36sp"
             app:layout_column="0"
             app:layout_row="6"
@@ -237,14 +235,12 @@
             app:layout_gravity="fill_horizontal|fill_vertical"
             app:layout_rowSpan="1"/>
 
-        <ToggleButton
+        <Button
             android:id="@+id/all_off"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/btn_border_on"
             android:text="@string/all_off"
-            android:textOff="@string/all_off"
-            android:textOn="@string/all_off"
             android:textSize="36sp"
             app:layout_column="1"
             app:layout_row="6"
@@ -253,14 +249,12 @@
             app:layout_gravity="fill_horizontal|fill_vertical"
             app:layout_rowSpan="1"/>
 
-        <ToggleButton
+        <Button
             android:id="@+id/movie"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/btn_border_on"
             android:text="@string/movie"
-            android:textOff="@string/movie"
-            android:textOn="@string/movie"
             android:textSize="36sp"
             app:layout_column="2"
             app:layout_row="6"

@@ -4,10 +4,16 @@ import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -17,6 +23,7 @@ public class FullscreenActivity extends AppCompatActivity {
     private static final String TAG = "MossRock";
     private static final int off = R.drawable.btn_border_off;
     private static final int on = R.drawable.btn_border_on;
+    private final List<ToggleButton> buttons = new ArrayList<>();
     private final OnCheckedChangeListener checkedChangeListener = new OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -30,12 +37,10 @@ public class FullscreenActivity extends AppCompatActivity {
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
         }
-
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
 
         }
-
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             int progress = seekBar.getProgress();
@@ -46,9 +51,44 @@ public class FullscreenActivity extends AppCompatActivity {
                 if (btn.isChecked()) {
                     noEventSetChecked(btn, false);
                 }
-            } else if (progress != 0 && !btn.isChecked()) {
-                noEventSetChecked(btn, true);
+            } else {
                 sendDimCommand(progress, lightCode.intValue());
+                if (!btn.isChecked()) {
+                    noEventSetChecked(btn, true);
+                }
+            }
+        }
+    };
+    View.OnClickListener allOn = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            setAll(true);
+        }
+    };
+    View.OnClickListener allOff = new View.OnClickListener() {
+        @Override
+        public void onClick (View v){
+            setAll(false);
+        }
+    };
+    View.OnClickListener movie = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            for (ToggleButton btn : buttons) {
+                if (btn.getId() == R.id.balcony) {
+                    SeekBar seekBar = (SeekBar)findViewById(R.id.balcony_dim);
+                    seekBar.setProgress(1);
+                    seekListener.onStopTrackingTouch(seekBar);
+                } else if (btn.getId() == R.id.library) {
+                    SeekBar seekBar = (SeekBar)findViewById(R.id.library_dim);
+                    seekBar.setProgress(1);
+                    seekListener.onStopTrackingTouch(seekBar);
+                } else {
+                    if (btn.isChecked()) {
+                        btn.setChecked(false);
+                    }
+                }
             }
         }
     };
@@ -63,6 +103,15 @@ public class FullscreenActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fullscreen);
         getSupportActionBar().hide();
+        buttons.add((ToggleButton)findViewById(R.id.kitchen));
+        buttons.add((ToggleButton)findViewById(R.id.entry));
+        buttons.add((ToggleButton)findViewById(R.id.nuutti));
+        buttons.add((ToggleButton)findViewById(R.id.viggo));
+        buttons.add((ToggleButton)findViewById(R.id.hallway));
+        buttons.add((ToggleButton)findViewById(R.id.venni));
+        buttons.add((ToggleButton)findViewById(R.id.balcony));
+        buttons.add((ToggleButton)findViewById(R.id.library));
+        buttons.add((ToggleButton)findViewById(R.id.bedroom));
         setButton((ToggleButton)findViewById(R.id.kitchen), 11);
         setButton((ToggleButton)findViewById(R.id.entry), 12);
         setButton((ToggleButton)findViewById(R.id.nuutti), 9);
@@ -77,6 +126,9 @@ public class FullscreenActivity extends AppCompatActivity {
         setSeekBar((SeekBar)findViewById(R.id.venni_dim), (ToggleButton)findViewById(R.id.venni));
         setSeekBar((SeekBar)findViewById(R.id.balcony_dim), (ToggleButton)findViewById(R.id.balcony));
         setSeekBar((SeekBar)findViewById(R.id.library_dim), (ToggleButton)findViewById(R.id.library));
+        ((Button)findViewById(R.id.all_on)).setOnClickListener(allOn);
+        ((Button)findViewById(R.id.all_off)).setOnClickListener(allOff);
+        ((Button)findViewById(R.id.movie)).setOnClickListener(movie);
     }
     private final void setButton(ToggleButton button, int code) {
         button.setOnCheckedChangeListener(checkedChangeListener);
@@ -86,6 +138,13 @@ public class FullscreenActivity extends AppCompatActivity {
     private final void setSeekBar(SeekBar bar, ToggleButton btn) {
         bar.setOnSeekBarChangeListener(seekListener);
         bar.setTag(btn);
+    }
+    private void setAll(boolean on) {
+        for (ToggleButton btn : buttons) {
+            if (btn.isChecked() ^ on) {
+                btn.setChecked(on);
+            }
+        }
     }
     private static final void sendCommand(boolean on, int lightCode) {
         String cmd = on ? "on: " : "off: ";
@@ -102,6 +161,6 @@ public class FullscreenActivity extends AppCompatActivity {
             button.setBackground(getResources().getDrawable(off));
             button.setTextColor(Color.parseColor("#FFFFFF"));
         }
-
     }
+
 }
