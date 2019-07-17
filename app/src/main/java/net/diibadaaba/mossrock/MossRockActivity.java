@@ -17,19 +17,14 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.BlockingDeque;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static java.net.InetAddress.getByName;
 
@@ -38,7 +33,9 @@ public class MossRockActivity extends AppCompatActivity {
     private static final int off = R.drawable.btn_border_off;
     private static final int on = R.drawable.btn_border_on;
     private static final String MOSS_ROCK_CODE = "w2r2 ";
-    private final List<ToggleButton> buttons = new ArrayList<>();
+    public final Map<String, ToggleButton> buttons = new LinkedHashMap<>();
+    public final Map<String, SeekBar> seekBars = new LinkedHashMap<>();
+    public final Map<String, Button> scenes = new LinkedHashMap<>();
     private static final int GW_PORT = 49880;
     private static DatagramSocket GW_SOCKET;
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -47,6 +44,7 @@ public class MossRockActivity extends AppCompatActivity {
     private final BlockingQueue<MRMessage> messageQueue = new LinkedBlockingDeque<>(10);
     private Thread receiver;
     private Thread sender;
+    private HttpServer server;
     private static class MRMessage {
         public final Runnable onSent;
         public final String command;
@@ -117,7 +115,7 @@ public class MossRockActivity extends AppCompatActivity {
         GW_SOCKET.setSoTimeout(2000);
         return GW_SOCKET;
     }
-    private final OnCheckedChangeListener checkedChangeListener = new OnCheckedChangeListener() {
+    public final OnCheckedChangeListener checkedChangeListener = new OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(final CompoundButton buttonView, final boolean isChecked) {
             Integer lightCode = (Integer)buttonView.getTag();
@@ -129,7 +127,7 @@ public class MossRockActivity extends AppCompatActivity {
             });
         }
     };
-    private final SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
+    public final SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
@@ -169,7 +167,7 @@ public class MossRockActivity extends AppCompatActivity {
     View.OnClickListener movie = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            for (ToggleButton btn : buttons) {
+            for (ToggleButton btn : buttons.values()) {
                 if (btn.getId() == R.id.balcony) {
                     SeekBar seekBar = (SeekBar)findViewById(R.id.balcony_dim);
                     seekBar.setProgress(0);
@@ -191,15 +189,23 @@ public class MossRockActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fullscreen);
         getSupportActionBar().hide();
-        buttons.add((ToggleButton)findViewById(R.id.viggo));
-        buttons.add((ToggleButton)findViewById(R.id.nuutti));
-        buttons.add((ToggleButton)findViewById(R.id.venni));
-        buttons.add((ToggleButton)findViewById(R.id.kitchen));
-        buttons.add((ToggleButton)findViewById(R.id.entry));
-        buttons.add((ToggleButton)findViewById(R.id.hallway));
-        buttons.add((ToggleButton)findViewById(R.id.balcony));
-        buttons.add((ToggleButton)findViewById(R.id.library));
-        buttons.add((ToggleButton)findViewById(R.id.bedroom));
+        buttons.put("viggo", (ToggleButton)findViewById(R.id.viggo));
+        buttons.put("nuutti", (ToggleButton)findViewById(R.id.nuutti));
+        buttons.put("venni", (ToggleButton)findViewById(R.id.venni));
+        buttons.put("kitchen", (ToggleButton)findViewById(R.id.kitchen));
+        buttons.put("entry", (ToggleButton)findViewById(R.id.entry));
+        buttons.put("hallway", (ToggleButton)findViewById(R.id.hallway));
+        buttons.put("balcony", (ToggleButton)findViewById(R.id.balcony));
+        buttons.put("library", (ToggleButton)findViewById(R.id.library));
+        buttons.put("bedroom", (ToggleButton)findViewById(R.id.bedroom));
+        seekBars.put("viggo", (SeekBar)findViewById(R.id.viggo_dim));
+        seekBars.put("nuutti", (SeekBar)findViewById(R.id.nuutti_dim));
+        seekBars.put("venni", (SeekBar)findViewById(R.id.venni_dim));
+        seekBars.put("balcony", (SeekBar)findViewById(R.id.balcony_dim));
+        seekBars.put("library", (SeekBar)findViewById(R.id.library_dim));
+        scenes.put("all_on", (Button)findViewById(R.id.all_on));
+        scenes.put("all_off", (Button)findViewById(R.id.all_off));
+        scenes.put("movie", (Button)findViewById(R.id.movie));
         setButton((ToggleButton)findViewById(R.id.viggo), 8);
         setButton((ToggleButton)findViewById(R.id.nuutti), 9);
         setButton((ToggleButton)findViewById(R.id.venni), 10);
@@ -219,7 +225,8 @@ public class MossRockActivity extends AppCompatActivity {
         ((Button)findViewById(R.id.movie)).setOnClickListener(movie);
         try {
             getGwSocket();
-        } catch (SocketException e) {
+            server = new HttpServer();
+        } catch (IOException e) {
         }
         receiver = new Thread(new Receiver());
         sender = new Thread(new Sender());
@@ -242,7 +249,7 @@ public class MossRockActivity extends AppCompatActivity {
         btn.setOnCheckedChangeListener(checkedChangeListener);
     }
     private void setAll(boolean on) {
-        for (ToggleButton btn : buttons) {
+        for (ToggleButton btn : buttons.values()) {
             if (btn.isChecked() ^ on) {
                 btn.setChecked(on);
             }
