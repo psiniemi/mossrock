@@ -49,7 +49,7 @@ public class HttpServer extends NanoHTTPD {
                     return newFixedLengthResponse(BAD_REQUEST, CONTENT_TYPE, RESPONSE_BAD_REQUEST);
                 }
                 MossRockActivity.getInstance()
-                        .checkedChangeListener
+                        .registrar.getCheckedChangeListener()
                         .onCheckedChanged(buttons().get(command[2]), "on".equals(command[1]));
                 break;
             case "dim":
@@ -66,7 +66,7 @@ public class HttpServer extends NanoHTTPD {
                 SeekBar target = seekBars().get(command[2]);
                 target.setProgress(value);
                 MossRockActivity.getInstance()
-                        .seekListener
+                        .registrar.getSeekListener()
                         .onStopTrackingTouch(target);
                 break;
             case "scene":
