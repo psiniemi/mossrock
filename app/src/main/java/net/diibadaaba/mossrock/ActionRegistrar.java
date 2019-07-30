@@ -4,10 +4,22 @@ import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+
 public interface ActionRegistrar {
     void registerActions(MossRockActivity activity);
     SeekBar.OnSeekBarChangeListener getSeekListener();
     CompoundButton.OnCheckedChangeListener getCheckedChangeListener();
+    final BlockingQueue<MRMessage> messageQueue = new LinkedBlockingDeque<>(10);
+    static class MRMessage {
+        public final Runnable onSent;
+        public final String command;
+        public MRMessage(Runnable onSent, String command) {
+            this.onSent = onSent;
+            this.command = command;
+        }
+    }
     default void setChecked(final CompoundButton btn, final boolean checked) {
         Runnable toggleAction = new Runnable() {
             @Override

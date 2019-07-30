@@ -1,5 +1,6 @@
 package net.diibadaaba.mossrock;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -17,8 +18,27 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 public class SlaveActions implements ActionRegistrar {
+    private static final String TAG = "MossRockSlave";
+    private Thread sender;
+    private class Sender implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                MRMessage next = null;
+                try {
+                    next = messageQueue.poll(1, TimeUnit.SECONDS);
+                } catch (InterruptedException e) { }
+                if (next != null) {
+                    Log.i(TAG, "Sending " + next.command);
+                    getAction(next.command);
+                    new Thread(next.onSent).start();
+                }
+            }
+        }
+    }
 
     private SeekBar.OnSeekBarChangeListener seekListener = new SeekBar.OnSeekBarChangeListener() {
         @Override
@@ -34,8 +54,10 @@ public class SlaveActions implements ActionRegistrar {
             int value = seekBar.getProgress();
             String name = (String)seekBar.getTag();
             String action = "dim/";
-            updateStatus(getAction(action + name + "?" + value));
-            startStatusPoller();
+            try {
+                messageQueue.put(new MRMessage(statusTask, action + name + "?" + value));
+            } catch (InterruptedException e) {
+            }
         }
     };
     private CompoundButton.OnCheckedChangeListener checkedChangeListener = new CompoundButton.OnCheckedChangeListener() {
@@ -43,21 +65,27 @@ public class SlaveActions implements ActionRegistrar {
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             String action = isChecked ? "on/" : "off/";
             String name = (String)buttonView.getTag();
-            updateStatus(getAction(action + name));
+            try {
+                messageQueue.put(new MRMessage(statusTask, action + name));
+            } catch (InterruptedException e) {
+            }
             toggleBackround(buttonView, isChecked);
         }
     };
 
-    private class SceneEnabler implements  View.OnClickListener {
+    private class SceneEnabler implements View.OnClickListener {
         private final String scene;
 
         public SceneEnabler(String scene) {
             this.scene = scene;
         }
+
         @Override
         public void onClick(View v) {
-            updateStatus(getAction("scene/" + scene));
-            startStatusPoller();
+            try {
+                messageQueue.put(new MRMessage(statusTask, "scene/" + scene));
+            } catch (InterruptedException e) {
+            }
         }
     }
     Button.OnClickListener allOn = new SceneEnabler("all_on");
@@ -82,7 +110,14 @@ public class SlaveActions implements ActionRegistrar {
         ((Button)activity.scenes.get("all_on")).setOnClickListener(allOn);
         ((Button)activity.scenes.get("all_off")).setOnClickListener(allOff);
         ((Button)activity.scenes.get("movie")).setOnClickListener(movie);
-        updateStatus();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                updateStatus();
+            }
+        }).start();
+        sender = new Thread(new Sender());
+        sender.start();
     }
 
     private void setSeekBar(MossRockActivity activity, String seekBar) {
@@ -111,14 +146,16 @@ public class SlaveActions implements ActionRegistrar {
     }
     public void updateStatus(String status) {
         try {
+            Log.i(TAG, "Got status: " + status);
             final JSONObject json = new JSONObject(status);
             for (Iterator<String> it = json.keys(); it.hasNext(); ) {
                 String key = it.next();
-                if ("status".equals(key)) {
-                    continue;
+                if (MossRockActivity.getInstance().buttons.containsKey(key)) {
+                    boolean checked = json.getBoolean(key);
+                    Log.i(TAG, "Setting button " + key + " to " + (checked ? "on" : "off"));
+                    ToggleButton button = MossRockActivity.getInstance().buttons.get(key);
+                    noEventSetChecked(button, checked);
                 }
-                ToggleButton button = MossRockActivity.getInstance().buttons.get(key);
-                noEventSetChecked(button, json.getBoolean(key));
             }
         } catch (JSONException e) {
         }
@@ -147,21 +184,18 @@ public class SlaveActions implements ActionRegistrar {
         }
         return result.toString("UTF-8");
     }
-    private void startStatusPoller() {
-        Runnable statusTask = new Runnable() {
-            @Override
-            public void run() {
-                synchronized (this) {
-                    for (int i = 0; i < 5; i++) {
-                        updateStatus();
-                        try {
-                            this.wait(1000);
-                        } catch (InterruptedException e) {
-                        }
+    Runnable statusTask = new Runnable() {
+        @Override
+        public void run() {
+            synchronized (this) {
+                for (int i = 0; i < 5; i++) {
+                    updateStatus();
+                    try {
+                        this.wait(1000);
+                    } catch (InterruptedException e) {
                     }
                 }
             }
-        };
-        new Thread(statusTask).start();
-    }
+        }
+    };
 }

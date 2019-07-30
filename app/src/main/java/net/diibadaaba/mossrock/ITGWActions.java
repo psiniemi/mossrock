@@ -24,7 +24,6 @@ public class ITGWActions implements ActionRegistrar {
     private static final String TAG = "MossRockITGW";
     private static final String MOSS_ROCK_CODE = "w2r2 ";
     private static final int GW_PORT = 49880;
-    private final BlockingQueue<MRMessage> messageQueue = new LinkedBlockingDeque<>(10);
     private final AtomicBoolean ackLock = new AtomicBoolean(false);
     private Thread receiver;
     private Thread sender;
@@ -114,14 +113,7 @@ public class ITGWActions implements ActionRegistrar {
         }
     };
 
-    private static class MRMessage {
-        public final Runnable onSent;
-        public final String command;
-        public MRMessage(Runnable onSent, String command) {
-            this.onSent = onSent;
-            this.command = command;
-        }
-    }
+
     private class Sender implements Runnable {
         @Override
         public void run() {
