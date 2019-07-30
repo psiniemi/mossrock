@@ -67,7 +67,7 @@ public class ITGWActions implements ActionRegistrar {
         }
         @Override
         public void onStopTrackingTouch(final SeekBar seekBar) {
-            int progress = seekBar.getProgress() + 1;
+            int progress = seekBar.getProgress();
             final ToggleButton btn = (ToggleButton)seekBar.getTag();
             Integer lightCode = (Integer)btn.getTag();
             sendDimCommand(progress, lightCode, new Runnable() {
@@ -217,12 +217,6 @@ public class ITGWActions implements ActionRegistrar {
         bar.setOnSeekBarChangeListener(seekListener);
         bar.setTag(btn);
     }
-    private void noEventSetChecked(ToggleButton btn, boolean checked) {
-        btn.setOnCheckedChangeListener(null);
-        btn.setChecked(checked);
-        toggleBackround(btn, checked);
-        btn.setOnCheckedChangeListener(checkedChangeListener);
-    }
     private static boolean doSend(final String command) {
         byte[] bytes = command.getBytes();
         try {
@@ -254,14 +248,6 @@ public class ITGWActions implements ActionRegistrar {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-    private void toggleBackround(final CompoundButton btn, final boolean checked) {
-        MossRockActivity.getInstance().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                MossRockActivity.getInstance().toggleBackround(btn, checked);
-            }
-        });
     }
     private void setAll(boolean on) {
         for (ToggleButton btn : MossRockActivity.getInstance().buttons.values()) {

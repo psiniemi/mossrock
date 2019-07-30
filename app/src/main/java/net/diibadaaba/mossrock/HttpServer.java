@@ -5,6 +5,9 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,14 +17,15 @@ import java.util.Set;
 import fi.iki.elonen.NanoHTTPD;
 
 import static fi.iki.elonen.NanoHTTPD.Response.Status.BAD_REQUEST;
+import static fi.iki.elonen.NanoHTTPD.Response.Status.INTERNAL_ERROR;
 import static fi.iki.elonen.NanoHTTPD.Response.Status.OK;
 
 public class HttpServer extends NanoHTTPD {
     private static final String TAG = "MossRockServer";
     private static final String CONTENT_TYPE = "application/json";
-    private static final String RESPONSE_OK = "{\"status\":\"ok\"}";
     private static final String RESPONSE_WRONG_METHOD = "{\"status\":\"error\",\"reason\":\"Invalid HTTP method\"}";
     private static final String RESPONSE_BAD_REQUEST = "{\"status\":\"error\",\"reason\":\"Invalid request\"}";
+    private static final String RESPONSE_ERROR = "{\"status\":\"error\",\"reason\":\"Internal error\"}";
     private static final Set<String> actions = new HashSet<>();
     public HttpServer() throws IOException {
         super(8088);
@@ -36,10 +40,11 @@ public class HttpServer extends NanoHTTPD {
          *   /on/nuutti
          *   /off/nuutti
          *   /dim/nuutti?5
+         *   /status
          */
         final String[] command = session.getUri().split("/");
         Log.i(TAG, Arrays.deepToString(command));
-        if (command.length != 3) {
+        if (!(command.length == 3 || (command.length == 2 && "status".equals(command[1])))) {
             return newFixedLengthResponse(BAD_REQUEST, CONTENT_TYPE, RESPONSE_BAD_REQUEST);
         }
         switch (command[1]) {
@@ -48,9 +53,9 @@ public class HttpServer extends NanoHTTPD {
                 if (!buttons().containsKey(command[2])) {
                     return newFixedLengthResponse(BAD_REQUEST, CONTENT_TYPE, RESPONSE_BAD_REQUEST);
                 }
-                MossRockActivity.getInstance()
-                        .registrar.getCheckedChangeListener()
-                        .onCheckedChanged(buttons().get(command[2]), "on".equals(command[1]));
+                ToggleButton button = buttons().get(command[2]);
+                boolean checked = "on".equals(command[1]);
+                MossRockActivity.getInstance().registrar.setChecked(button, checked);
                 break;
             case "dim":
                 if (!seekBars().containsKey(command[2])) {
@@ -66,8 +71,7 @@ public class HttpServer extends NanoHTTPD {
                 SeekBar target = seekBars().get(command[2]);
                 target.setProgress(value);
                 MossRockActivity.getInstance()
-                        .registrar.getSeekListener()
-                        .onStopTrackingTouch(target);
+                        .registrar.setProgress(target, value);
                 break;
             case "scene":
                 if (!scenes().containsKey(command[2])) {
@@ -80,10 +84,22 @@ public class HttpServer extends NanoHTTPD {
                     }
                 });
                 break;
+            case "status":
+                break;
             default:
-                return newFixedLengthResponse(BAD_REQUEST, CONTENT_TYPE, RESPONSE_BAD_REQUEST);
+                return newFixedLengthResponse(INTERNAL_ERROR, CONTENT_TYPE, RESPONSE_BAD_REQUEST);
         }
-        return newFixedLengthResponse(OK, CONTENT_TYPE, RESPONSE_OK);
+        try {
+            JSONObject response = new JSONObject().put("status", "ok");
+            for (Map.Entry<String, ToggleButton> next : MossRockActivity.getInstance().buttons.entrySet()) {
+                boolean checked = ((ToggleButton)MossRockActivity.getInstance().findViewById(next.getValue().getId())).isChecked();
+                response.put(next.getKey(), checked);
+                response.put(next.getKey() + "-code", next.getValue().getTag());
+            }
+            return newFixedLengthResponse(OK, CONTENT_TYPE, response.toString());
+        } catch (JSONException e) {
+            return newFixedLengthResponse(INTERNAL_ERROR, CONTENT_TYPE, RESPONSE_ERROR);
+        }
     }
     private Map<String, ToggleButton> buttons() {
         return MossRockActivity.getInstance().buttons;
