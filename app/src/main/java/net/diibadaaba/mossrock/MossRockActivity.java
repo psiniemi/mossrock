@@ -21,7 +21,6 @@ public class MossRockActivity extends AppCompatActivity {
     public final Map<String, ToggleButton> buttons = new LinkedHashMap<>();
     public final Map<String, SeekBar> seekBars = new LinkedHashMap<>();
     public final Map<String, Button> scenes = new LinkedHashMap<>();
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static MossRockActivity instance;
     public ActionRegistrar registrar;
     public MossRockActivity() {
@@ -53,7 +52,7 @@ public class MossRockActivity extends AppCompatActivity {
         scenes.put("all_on", (Button)findViewById(R.id.all_on));
         scenes.put("all_off", (Button)findViewById(R.id.all_off));
         scenes.put("movie", (Button)findViewById(R.id.movie));
-        registrar = new ITGWActions();
+        registrar = new SlaveActions();
         registrar.registerActions(this);
     }
     public void toggleBackround(CompoundButton button, boolean isChecked) {
