@@ -18,11 +18,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class SlaveActions implements ActionRegistrar {
     private static final String TAG = "MossRockSlave";
     private Thread sender;
+    private Thread poller;
+
     private class Sender implements Runnable {
         @Override
         public void run() {
@@ -88,28 +91,17 @@ public class SlaveActions implements ActionRegistrar {
             }
         }
     }
-    Button.OnClickListener allOn = new SceneEnabler("all_on");
-    Button.OnClickListener allOff = new SceneEnabler("all_off");
-    Button.OnClickListener movie = new SceneEnabler("movie");
     @Override
     public void registerActions(MossRockActivity activity) {
-        setButton(activity, "viggo");
-        setButton(activity, "nuutti");
-        setButton(activity, "venni");
-        setButton(activity, "kitchen");
-        setButton(activity, "entry");
-        setButton(activity, "hallway");
-        setButton(activity, "balcony");
-        setButton(activity, "library");
-        setButton(activity, "bedroom");
-        setSeekBar(activity, "viggo");
-        setSeekBar(activity, "nuutti");
-        setSeekBar(activity, "venni");
-        setSeekBar(activity, "balcony");
-        setSeekBar(activity, "library");
-        ((Button)activity.scenes.get("all_on")).setOnClickListener(allOn);
-        ((Button)activity.scenes.get("all_off")).setOnClickListener(allOff);
-        ((Button)activity.scenes.get("movie")).setOnClickListener(movie);
+        for (String next: activity.buttons.keySet()) {
+            setButton(activity, next);
+        }
+        for (String next : activity.seekBars.keySet()) {
+            setSeekBar(activity, next);
+        }
+        for (Map.Entry<String, Button> next : activity.scenes.entrySet()) {
+            next.getValue().setOnClickListener(new SceneEnabler(next.getKey()));
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -118,6 +110,8 @@ public class SlaveActions implements ActionRegistrar {
         }).start();
         sender = new Thread(new Sender());
         sender.start();
+        poller = new Thread(statusPoller);
+        poller.start();
     }
 
     private void setSeekBar(MossRockActivity activity, String seekBar) {
@@ -192,6 +186,20 @@ public class SlaveActions implements ActionRegistrar {
                     updateStatus();
                     try {
                         this.wait(1000);
+                    } catch (InterruptedException e) {
+                    }
+                }
+            }
+        }
+    };
+    Runnable statusPoller = new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                synchronized (this) {
+                    updateStatus();
+                    try {
+                        this.wait(10000);
                     } catch (InterruptedException e) {
                     }
                 }
