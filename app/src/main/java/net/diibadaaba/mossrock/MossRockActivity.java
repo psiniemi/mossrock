@@ -21,7 +21,6 @@ public class MossRockActivity extends AppCompatActivity {
     public final Map<String, ToggleButton> buttons = new LinkedHashMap<>();
     public final Map<String, SeekBar> seekBars = new LinkedHashMap<>();
     public final Map<String, Button> scenes = new LinkedHashMap<>();
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static MossRockActivity instance;
     public ActionRegistrar registrar;
     public MossRockActivity() {
