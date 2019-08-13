@@ -1,18 +1,21 @@
 package net.diibadaaba.mossrock;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.TypefaceSpan;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class MossRockActivity extends AppCompatActivity {
     private static final String TAG = "MossRock";
@@ -21,6 +24,7 @@ public class MossRockActivity extends AppCompatActivity {
     public final Map<String, ToggleButton> buttons = new LinkedHashMap<>();
     public final Map<String, SeekBar> seekBars = new LinkedHashMap<>();
     public final Map<String, Button> scenes = new LinkedHashMap<>();
+    public SeekBar volume;
     private static MossRockActivity instance;
     public ActionRegistrar registrar;
     public MossRockActivity() {
@@ -35,23 +39,29 @@ public class MossRockActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fullscreen);
         getSupportActionBar().hide();
-        buttons.put("viggo", (ToggleButton)findViewById(R.id.viggo));
-        buttons.put("nuutti", (ToggleButton)findViewById(R.id.nuutti));
-        buttons.put("venni", (ToggleButton)findViewById(R.id.venni));
-        buttons.put("kitchen", (ToggleButton)findViewById(R.id.kitchen));
-        buttons.put("entry", (ToggleButton)findViewById(R.id.entry));
-        buttons.put("hallway", (ToggleButton)findViewById(R.id.hallway));
-        buttons.put("balcony", (ToggleButton)findViewById(R.id.balcony));
-        buttons.put("library", (ToggleButton)findViewById(R.id.library));
-        buttons.put("bedroom", (ToggleButton)findViewById(R.id.bedroom));
-        seekBars.put("viggo", (SeekBar)findViewById(R.id.viggo_dim));
-        seekBars.put("nuutti", (SeekBar)findViewById(R.id.nuutti_dim));
-        seekBars.put("venni", (SeekBar)findViewById(R.id.venni_dim));
-        seekBars.put("balcony", (SeekBar)findViewById(R.id.balcony_dim));
-        seekBars.put("library", (SeekBar)findViewById(R.id.library_dim));
-        scenes.put("all_on", (Button)findViewById(R.id.all_on));
-        scenes.put("all_off", (Button)findViewById(R.id.all_off));
-        scenes.put("movie", (Button)findViewById(R.id.movie));
+        buttons.put("viggo", findViewById(R.id.viggo));
+        buttons.put("nuutti", findViewById(R.id.nuutti));
+        buttons.put("venni", findViewById(R.id.venni));
+        buttons.put("kitchen", findViewById(R.id.kitchen));
+        buttons.put("entry", findViewById(R.id.entry));
+        buttons.put("hallway", findViewById(R.id.hallway));
+        buttons.put("balcony", findViewById(R.id.balcony));
+        buttons.put("library", findViewById(R.id.library));
+        buttons.put("bedroom", findViewById(R.id.bedroom));
+        seekBars.put("viggo", findViewById(R.id.viggo_dim));
+        seekBars.put("nuutti", findViewById(R.id.nuutti_dim));
+        seekBars.put("venni", findViewById(R.id.venni_dim));
+        seekBars.put("balcony", findViewById(R.id.balcony_dim));
+        seekBars.put("library", findViewById(R.id.library_dim));
+        scenes.put("all_on", findViewById(R.id.all_on));
+        scenes.put("all_off", findViewById(R.id.all_off));
+        scenes.put("movie", findViewById(R.id.movie));
+        scenes.put("tv", findViewById(R.id.tv));
+        scenes.put("venom", findViewById(R.id.venom));
+        scenes.put("wii", findViewById(R.id.wii));
+        scenes.put("ps4", findViewById(R.id.ps4));
+        scenes.put("steam", findViewById(R.id.steam));
+        volume = findViewById(R.id.volume);
         registrar = new ITGWActions();
         registrar.registerActions(this);
     }

@@ -4,6 +4,7 @@ import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -69,12 +70,30 @@ public interface ActionRegistrar {
         MossRockActivity.getInstance().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                CompoundButton.OnCheckedChangeListener listener = getListener(btn);
                 btn.setOnCheckedChangeListener(null);
                 btn.setChecked(checked);
                 MossRockActivity.getInstance().toggleBackround(btn, checked);
-                btn.setOnCheckedChangeListener(getCheckedChangeListener());
+                btn.setOnCheckedChangeListener(listener);
             }
         });
     }
-
+    static CompoundButton.OnCheckedChangeListener getListener(CompoundButton button) {
+        // get the nested class `android.view.View$ListenerInfo`
+        Field listenerInfoField = null;
+        try {
+            listenerInfoField = Class.forName("android.widget.CompoundButton").getDeclaredField("mOnCheckedChangeListener");
+            if (listenerInfoField != null) {
+                listenerInfoField.setAccessible(true);
+            }
+            return (CompoundButton.OnCheckedChangeListener) listenerInfoField.get(button);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

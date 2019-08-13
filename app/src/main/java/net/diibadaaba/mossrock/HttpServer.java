@@ -2,6 +2,7 @@ package net.diibadaaba.mossrock;
 
 import android.util.Log;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
@@ -40,6 +41,7 @@ public class HttpServer extends NanoHTTPD {
          *   /on/nuutti
          *   /off/nuutti
          *   /dim/nuutti?5
+         *   /scene/wii
          *   /status
          */
         final String[] command = session.getUri().split("/");
@@ -77,12 +79,17 @@ public class HttpServer extends NanoHTTPD {
                 if (!scenes().containsKey(command[2])) {
                     return newFixedLengthResponse(BAD_REQUEST, CONTENT_TYPE, RESPONSE_BAD_REQUEST);
                 }
-                MossRockActivity.getInstance().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        scenes().get(command[2]).callOnClick();
-                    }
-                });
+                final Button scene = scenes().get(command[2]);
+                if (scene instanceof ToggleButton) {
+                    MossRockActivity.getInstance().registrar.setChecked((CompoundButton) scene, true);
+                } else {
+                    MossRockActivity.getInstance().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            scene.callOnClick();
+                        }
+                    });
+                }
                 break;
             case "status":
                 break;

@@ -1,5 +1,7 @@
 package net.diibadaaba.mossrock;
 
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -7,17 +9,30 @@ import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
+import com.github.mob41.blapi.RM2Device;
+import com.github.mob41.blapi.mac.Mac;
+import com.github.mob41.blapi.pkt.cmd.rm2.SendDataCmdPayload;
+import static com.github.mob41.blapi.HexUtil.bytes2hex;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static com.github.mob41.blapi.HexUtil.bytes2hex;
 import static java.net.InetAddress.getByName;
 
 public class ITGWActions implements ActionRegistrar {
@@ -27,10 +42,37 @@ public class ITGWActions implements ActionRegistrar {
     private final AtomicBoolean ackLock = new AtomicBoolean(false);
     private Thread receiver;
     private Thread sender;
+    private Thread irSender;
     private HttpServer server;
+    byte[][] VOLUMES = new byte[][] {
+            IRCommands.HK_VOL_DOWN_30DB,
+            IRCommands.HK_VOL_DOWN_20DB,
+            IRCommands.HK_VOL_DOWN_10DB,
+            IRCommands.HK_VOL_DOWN_5DB,
+            null,
+            IRCommands.HK_VOL_UP_5DB,
+            IRCommands.HK_VOL_UP_10DB,
+            IRCommands.HK_VOL_UP_20DB,
+            IRCommands.HK_VOL_UP_30DB
+    };
     private static DatagramSocket GW_SOCKET;
     private static ITGWActions instance;
+    final BlockingQueue<byte[]> irQueue = new LinkedBlockingDeque<>();
+    private RM2Device dev;
+    private static final Set<String> ampScenes = new HashSet<>(Arrays.asList("venom", "wii", "ps4", "steam"));
+    private ToggleButton activeAmpScene;
 
+    private RM2Device getDev() {
+        if (dev == null) {
+            try {
+                dev = (RM2Device) RM2Device.discoverDevices(InetAddress.getByAddress(new byte[] {0,0,0,0}), 0, 0)[0];
+                dev.auth();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return dev;
+    }
     public  ITGWActions() {
         instance = this;
     }
@@ -83,7 +125,15 @@ public class ITGWActions implements ActionRegistrar {
     View.OnClickListener allOn = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            setAll(true);
+            for (ToggleButton btn : MossRockActivity.getInstance().buttons.values()) {
+                if (btn.getId() == R.id.balcony || btn.getId() == R.id.library ||
+                    btn.getId() == R.id.hallway || btn.getId() == R.id.entry ||
+                    btn.getId() == R.id.kitchen) {
+                    if (!btn.isChecked()) {
+                        btn.setChecked(true);
+                    }
+                }
+            }
         }
     };
     View.OnClickListener allOff = new View.OnClickListener() {
@@ -95,6 +145,12 @@ public class ITGWActions implements ActionRegistrar {
     View.OnClickListener movie = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            try {
+                irQueue.put(IRCommands.HK_AUX);
+                irQueue.put(IRCommands.HK_VOL_UP_10DB);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             for (ToggleButton btn : MossRockActivity.getInstance().buttons.values()) {
                 if (btn.getId() == R.id.balcony) {
                     SeekBar seekBar = MossRockActivity.getInstance().seekBars.get("balcony");
@@ -112,8 +168,67 @@ public class ITGWActions implements ActionRegistrar {
             }
         }
     };
+    View.OnClickListener tv = new View.OnClickListener() {
 
+        @Override
+        public void onClick(View v) {
+            try {
+                irQueue.put(IRCommands.LG_ON_OFF);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+    CompoundButton.OnCheckedChangeListener ampScene = new CompoundButton.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            if (!isChecked) {
+                noEventSetChecked((ToggleButton) buttonView, true);
+                return;
+            }
+            AmpSceneTag newTag = (AmpSceneTag) buttonView.getTag();
+            if (activeAmpScene != null) {
+                noEventSetChecked(activeAmpScene, false);
+                AmpSceneTag oldTag = (AmpSceneTag) activeAmpScene.getTag();
+                for (byte[] command : newTag.commands) {
+                    if (!oldTag.commands.contains(command)) {
+                        try {
+                            irQueue.put(command);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                toggleBackround(buttonView, true);
+            }
+            activeAmpScene = (ToggleButton) buttonView;
+            for (String next : newTag.others) {
+                noEventSetChecked((ToggleButton) MossRockActivity.getInstance().scenes.get(next), false);
+            }
+        }
+    };
+    private final SeekBar.OnSeekBarChangeListener volumeListener = new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
+        }
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+        @Override
+        public void onStopTrackingTouch(final SeekBar seekBar) {
+            int progress = seekBar.getProgress();
+            if (VOLUMES[progress] != null) {
+                try {
+                    irQueue.put(VOLUMES[progress]);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            seekBar.setProgress(4);
+        }
+    };
     private class Sender implements Runnable {
         @Override
         public void run() {
@@ -132,6 +247,27 @@ public class ITGWActions implements ActionRegistrar {
                             MossRockActivity.getInstance().runOnUiThread(next.onSent);
                         }
                     } catch (InterruptedException e) {}
+                }
+            }
+        }
+    }
+    private class IRSender implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                byte[] next = null;
+                try {
+                    next = irQueue.poll(1, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                }
+                if (next != null && next.length > 0) {
+                    try {
+                        RM2Device dev = getDev();
+                        Log.i(TAG, "Sending " + bytes2hex(next));
+                        dev.sendCmdPkt(new SendDataCmdPayload(next));
+                    } catch (IOException e) {
+                        Log.i(TAG, "Failed to send IR command", e);
+                    }
                 }
             }
         }
@@ -169,7 +305,6 @@ public class ITGWActions implements ActionRegistrar {
         GW_SOCKET.setSoTimeout(2000);
         return GW_SOCKET;
     }
-
     public void registerActions(MossRockActivity activity) {
         setButton(activity.buttons.get("viggo"), 8);
         setButton(activity.buttons.get("nuutti"), 9);
@@ -185,10 +320,14 @@ public class ITGWActions implements ActionRegistrar {
         setSeekBar(activity.seekBars.get("venni"), activity.buttons.get("venni"));
         setSeekBar(activity.seekBars.get("balcony"), activity.buttons.get("balcony"));
         setSeekBar(activity.seekBars.get("library"), activity.buttons.get("library"));
-        ((Button)activity.scenes.get("all_on")).setOnClickListener(allOn);
-        ((Button)activity.scenes.get("all_off")).setOnClickListener(allOff);
-        ((Button)activity.scenes.get("movie")).setOnClickListener(movie);
-
+        activity.scenes.get("all_on").setOnClickListener(allOn);
+        activity.scenes.get("all_off").setOnClickListener(allOff);
+        activity.scenes.get("movie").setOnClickListener(movie);
+        activity.scenes.get("tv").setOnClickListener(tv);
+        setAmpScene("venom", IRCommands.HK_AUX, IRCommands.HK_VOL_UP_30DB);
+        setAmpScene("wii", IRCommands.HK_STB, IRCommands.HK_VOL_DOWN_30DB);
+        setAmpScene("ps4", IRCommands.HK_GAME, IRCommands.HK_VOL_DOWN_30DB);
+        setAmpScene("steam", IRCommands.HK_SERVER, IRCommands.HK_VOL_DOWN_30DB);
         try {
             getGwSocket();
             server = new HttpServer();
@@ -196,9 +335,32 @@ public class ITGWActions implements ActionRegistrar {
         }
         receiver = new Thread(new Receiver());
         sender = new Thread(new Sender());
+        irSender = new Thread(new IRSender());
         receiver.start();
         sender.start();
-
+        irSender.start();
+        ToggleButton venom = (ToggleButton)activity.scenes.get("venom");
+        venom.setChecked(true);
+        toggleBackround(venom, true);
+        SeekBar volume = MossRockActivity.getInstance().findViewById(R.id.volume);
+        volume.setOnSeekBarChangeListener(volumeListener);
+    }
+    private static class AmpSceneTag {
+        public final List<byte[]> commands;
+        public final Set<String> others;
+        AmpSceneTag(List<byte[]> commands, Set<String> others) {
+            this.commands = commands;
+            this.others = others;
+        }
+    }
+    private void setAmpScene(String name, byte[] ... commands) {
+        CompoundButton button = (CompoundButton) MossRockActivity.getInstance().scenes.get(name);
+        button.setChecked(false);
+        Set<String> others = new HashSet<>(ampScenes);
+        others.remove(name);
+        button.setTag(new AmpSceneTag(Arrays.asList(commands), others));
+        button.setOnCheckedChangeListener(ampScene);
+        toggleBackround(button, false);
     }
     private void setButton(final ToggleButton button, int code) {
         button.setOnCheckedChangeListener(checkedChangeListener);

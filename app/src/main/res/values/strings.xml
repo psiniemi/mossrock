@@ -15,4 +15,10 @@
     <string name="all_on">All On</string>
     <string name="all_off">All Off</string>
     <string name="movie">Movie</string>
+    <string name="tv">TV \u23FB</string>
+    <string name="venom">Venom</string>
+    <string name="wii">Wii</string>
+    <string name="ps4">PS4</string>
+    <string name="steam">Steam</string>
+    <string name="volume">Volume</string>
 </resources>
