@@ -125,15 +125,6 @@ public class SlaveActions implements ActionRegistrar {
         button.setOnCheckedChangeListener(checkedChangeListener);
     }
 
-    @Override
-    public SeekBar.OnSeekBarChangeListener getSeekListener() {
-        return seekListener;
-    }
-
-    @Override
-    public CompoundButton.OnCheckedChangeListener getCheckedChangeListener() {
-        return checkedChangeListener;
-    }
     public void updateStatus() {
         updateStatus(getAction("status"));
     }

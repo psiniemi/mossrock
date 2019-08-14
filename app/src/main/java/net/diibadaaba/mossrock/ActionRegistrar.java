@@ -10,8 +10,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public interface ActionRegistrar {
     void registerActions(MossRockActivity activity);
-    SeekBar.OnSeekBarChangeListener getSeekListener();
-    CompoundButton.OnCheckedChangeListener getCheckedChangeListener();
     final BlockingQueue<MRMessage> messageQueue = new LinkedBlockingDeque<>(10);
     static class MRMessage {
         public final Runnable onSent;
@@ -45,7 +43,7 @@ public interface ActionRegistrar {
             public void run() {
                 synchronized (this) {
                     seekBar.setProgress(progress);
-                    getSeekListener().onStopTrackingTouch(seekBar);
+                    getListener(seekBar).onStopTrackingTouch(seekBar);
                     this.notify();
                 }
             }
@@ -87,6 +85,24 @@ public interface ActionRegistrar {
                 listenerInfoField.setAccessible(true);
             }
             return (CompoundButton.OnCheckedChangeListener) listenerInfoField.get(button);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    static SeekBar.OnSeekBarChangeListener getListener(SeekBar seekBar) {
+        // get the nested class `android.view.View$ListenerInfo`
+        Field listenerInfoField = null;
+        try {
+            listenerInfoField = Class.forName("android.widget.SeekBar").getDeclaredField("mOnSeekBarChangeListener");
+            if (listenerInfoField != null) {
+                listenerInfoField.setAccessible(true);
+            }
+            return (SeekBar.OnSeekBarChangeListener) listenerInfoField.get(seekBar);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {

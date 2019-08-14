@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +28,17 @@ public class HttpServer extends NanoHTTPD {
     private static final String RESPONSE_WRONG_METHOD = "{\"status\":\"error\",\"reason\":\"Invalid HTTP method\"}";
     private static final String RESPONSE_BAD_REQUEST = "{\"status\":\"error\",\"reason\":\"Invalid request\"}";
     private static final String RESPONSE_ERROR = "{\"status\":\"error\",\"reason\":\"Internal error\"}";
+    private static final Map<String, Integer> VOLUMES = new HashMap<>();
+    static {
+        VOLUMES.put("down5", 3);
+        VOLUMES.put("down10", 2);
+        VOLUMES.put("down20", 1);
+        VOLUMES.put("down30", 0);
+        VOLUMES.put("up5", 5);
+        VOLUMES.put("up10", 6);
+        VOLUMES.put("up20", 7);
+        VOLUMES.put("up30", 8);
+    }
     private static final Set<String> actions = new HashSet<>();
     public HttpServer() throws IOException {
         super(8088);
@@ -42,6 +54,7 @@ public class HttpServer extends NanoHTTPD {
          *   /off/nuutti
          *   /dim/nuutti?5
          *   /scene/wii
+         *   /volume/up5
          *   /status
          */
         final String[] command = session.getUri().split("/");
@@ -92,6 +105,15 @@ public class HttpServer extends NanoHTTPD {
                 }
                 break;
             case "status":
+                break;
+            case "volume":
+                if (!VOLUMES.containsKey(command[2])) {
+                    return newFixedLengthResponse(BAD_REQUEST, CONTENT_TYPE, RESPONSE_BAD_REQUEST);
+                }
+                SeekBar volume = MossRockActivity.getInstance().volume;
+                int progress = VOLUMES.get(command[2]);
+                volume.setProgress(progress);
+                MossRockActivity.getInstance().registrar.setProgress(volume, progress);
                 break;
             default:
                 return newFixedLengthResponse(INTERNAL_ERROR, CONTENT_TYPE, RESPONSE_BAD_REQUEST);
