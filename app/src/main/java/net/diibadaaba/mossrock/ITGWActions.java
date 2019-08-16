@@ -79,9 +79,6 @@ public class ITGWActions implements ActionRegistrar {
     public ITGWActions getInstance() {
         return instance;
     }
-    public CompoundButton.OnCheckedChangeListener getCheckedChangeListener() {
-        return checkedChangeListener;
-    }
     public SeekBar.OnSeekBarChangeListener getSeekListener() {
         return seekListener;
     }
@@ -205,6 +202,9 @@ public class ITGWActions implements ActionRegistrar {
             for (String next : newTag.others) {
                 noEventSetChecked((ToggleButton) MossRockActivity.getInstance().scenes.get(next), false);
             }
+            if (newTag.postAction != null) {
+                newTag.postAction.run();
+            }
         }
     };
     private final SeekBar.OnSeekBarChangeListener volumeListener = new SeekBar.OnSeekBarChangeListener() {
@@ -324,10 +324,17 @@ public class ITGWActions implements ActionRegistrar {
         activity.scenes.get("all_off").setOnClickListener(allOff);
         activity.scenes.get("movie").setOnClickListener(movie);
         activity.scenes.get("tv").setOnClickListener(tv);
-        setAmpScene("venom", IRCommands.HK_AUX, IRCommands.HK_VOL_UP_30DB);
-        setAmpScene("wii", IRCommands.HK_STB, IRCommands.HK_VOL_DOWN_30DB);
-        setAmpScene("ps4", IRCommands.HK_GAME, IRCommands.HK_VOL_DOWN_30DB);
-        setAmpScene("steam", IRCommands.HK_SERVER, IRCommands.HK_VOL_DOWN_30DB);
+        setAmpScene("venom", null, IRCommands.HK_AUX, IRCommands.HK_VOL_UP_30DB);
+        setAmpScene("wii", new Runnable() {
+            @Override
+            public void run() {
+                SeekBar balcony = MossRockActivity.getInstance().seekBars.get("balcony");
+                balcony.setProgress(0);
+                ActionRegistrar.getListener(balcony).onStopTrackingTouch(balcony);
+            }
+        }, IRCommands.HK_STB, IRCommands.HK_VOL_DOWN_30DB);
+        setAmpScene("ps4", null, IRCommands.HK_GAME, IRCommands.HK_VOL_DOWN_30DB);
+        setAmpScene("steam", null, IRCommands.HK_SERVER, IRCommands.HK_VOL_DOWN_30DB);
         try {
             getGwSocket();
             server = new HttpServer();
@@ -348,17 +355,19 @@ public class ITGWActions implements ActionRegistrar {
     private static class AmpSceneTag {
         public final List<byte[]> commands;
         public final Set<String> others;
-        AmpSceneTag(List<byte[]> commands, Set<String> others) {
+        public final Runnable postAction;
+        AmpSceneTag(List<byte[]> commands, Set<String> others, Runnable postAction) {
             this.commands = commands;
             this.others = others;
+            this.postAction = postAction;
         }
     }
-    private void setAmpScene(String name, byte[] ... commands) {
+    private void setAmpScene(String name, Runnable postAction, byte[] ... commands) {
         CompoundButton button = (CompoundButton) MossRockActivity.getInstance().scenes.get(name);
         button.setChecked(false);
         Set<String> others = new HashSet<>(ampScenes);
         others.remove(name);
-        button.setTag(new AmpSceneTag(Arrays.asList(commands), others));
+        button.setTag(new AmpSceneTag(Arrays.asList(commands), others, postAction));
         button.setOnCheckedChangeListener(ampScene);
         toggleBackround(button, false);
     }

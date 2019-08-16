@@ -76,7 +76,7 @@ public interface ActionRegistrar {
             }
         });
     }
-    static CompoundButton.OnCheckedChangeListener getListener(CompoundButton button) {
+    public static CompoundButton.OnCheckedChangeListener getListener(CompoundButton button) {
         // get the nested class `android.view.View$ListenerInfo`
         Field listenerInfoField = null;
         try {
@@ -94,7 +94,7 @@ public interface ActionRegistrar {
         }
         return null;
     }
-    static SeekBar.OnSeekBarChangeListener getListener(SeekBar seekBar) {
+    public static SeekBar.OnSeekBarChangeListener getListener(SeekBar seekBar) {
         // get the nested class `android.view.View$ListenerInfo`
         Field listenerInfoField = null;
         try {
