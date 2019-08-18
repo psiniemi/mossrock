@@ -123,7 +123,12 @@ public class HttpServer extends NanoHTTPD {
             for (Map.Entry<String, ToggleButton> next : MossRockActivity.getInstance().buttons.entrySet()) {
                 boolean checked = ((ToggleButton)MossRockActivity.getInstance().findViewById(next.getValue().getId())).isChecked();
                 response.put(next.getKey(), checked);
-                response.put(next.getKey() + "-code", next.getValue().getTag());
+            }
+            for (Map.Entry<String, Button> next : MossRockActivity.getInstance().scenes.entrySet()) {
+                if (next.getValue() instanceof ToggleButton) {
+                    boolean checked = ((ToggleButton) MossRockActivity.getInstance().findViewById(next.getValue().getId())).isChecked();
+                    response.put(next.getKey(), checked);
+                }
             }
             return newFixedLengthResponse(OK, CONTENT_TYPE, response.toString());
         } catch (JSONException e) {
