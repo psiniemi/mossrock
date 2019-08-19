@@ -56,7 +56,7 @@ public class MossRockActivity extends AppCompatActivity {
         scenes.put("ps4", findViewById(R.id.ps4));
         scenes.put("steam", findViewById(R.id.steam));
         volume = findViewById(R.id.volume);
-        registrar = new ITGWActions();
+        registrar = new SlaveActions();
         registrar.registerActions(this);
     }
     public void toggleBackround(CompoundButton button, boolean isChecked) {
