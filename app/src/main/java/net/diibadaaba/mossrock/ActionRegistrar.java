@@ -1,16 +1,73 @@
 package net.diibadaaba.mossrock;
 
+import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
+import com.github.mob41.blapi.RM2Device;
+import com.github.mob41.blapi.pkt.cmd.rm2.SendDataCmdPayload;
+
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.github.mob41.blapi.HexUtil.bytes2hex;
 
 public interface ActionRegistrar {
+    final String TAG = "ActionRegistrar";
     void registerActions(MossRockActivity activity);
     final BlockingQueue<MRMessage> messageQueue = new LinkedBlockingDeque<>(10);
+    final BlockingQueue<byte[]> irQueue = new LinkedBlockingDeque<>();
+    Thread irSender = new Thread(new IRSender());
+    static AtomicReference<RM2Device> dev = new AtomicReference<>(null);
+    class IRSender implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                byte[] next = null;
+                try {
+                    next = irQueue.poll(1, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                }
+                if (next != null && next.length > 0) {
+                    try {
+                        RM2Device dev = ActionRegistrar.getDev();
+                        Log.i(TAG, "Sending " + bytes2hex(next));
+                        dev.sendCmdPkt(new SendDataCmdPayload(next));
+                    } catch (IOException e) {
+                        Log.i(TAG, "Failed to send IR command", e);
+                    }
+                }
+            }
+        }
+    }
+    static RM2Device getDev() {
+        if (dev.get() == null) {
+            try {
+                dev.set((RM2Device) RM2Device.discoverDevices(InetAddress.getByAddress(new byte[] {0,0,0,0}), 0, 0)[0]);
+                dev.get().auth();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return dev.get();
+    }
+    byte[][] VOLUMES = new byte[][] {
+            IRCommands.HK_VOL_DOWN_30DB,
+            IRCommands.HK_VOL_DOWN_20DB,
+            IRCommands.HK_VOL_DOWN_10DB,
+            IRCommands.HK_VOL_DOWN_5DB,
+            null,
+            IRCommands.HK_VOL_UP_5DB,
+            IRCommands.HK_VOL_UP_10DB,
+            IRCommands.HK_VOL_UP_20DB,
+            IRCommands.HK_VOL_UP_30DB
+    };
     static class MRMessage {
         public final Runnable onSent;
         public final String command;
@@ -112,4 +169,27 @@ public interface ActionRegistrar {
         }
         return null;
     }
+    final SeekBar.OnSeekBarChangeListener volumeListener = new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+        }
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+        @Override
+        public void onStopTrackingTouch(final SeekBar seekBar) {
+            int progress = seekBar.getProgress();
+            if (VOLUMES[progress] != null) {
+                try {
+                    irQueue.put(VOLUMES[progress]);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            seekBar.setProgress(4);
+        }
+    };
+
 }

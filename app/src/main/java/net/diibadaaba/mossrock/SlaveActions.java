@@ -101,6 +101,8 @@ public class SlaveActions implements ActionRegistrar {
         for (Map.Entry<String, Button> next : activity.scenes.entrySet()) {
             next.getValue().setOnClickListener(new SceneEnabler(next.getKey()));
         }
+        SeekBar volume = MossRockActivity.getInstance().findViewById(R.id.volume);
+        volume.setOnSeekBarChangeListener(volumeListener);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -111,6 +113,7 @@ public class SlaveActions implements ActionRegistrar {
         sender.start();
         poller = new Thread(statusPoller);
         poller.start();
+        irSender.start();
     }
 
     private void setSeekBar(MossRockActivity activity, String seekBar) {
@@ -138,6 +141,12 @@ public class SlaveActions implements ActionRegistrar {
                     boolean checked = json.getBoolean(key);
                     Log.i(TAG, "Setting button " + key + " to " + (checked ? "on" : "off"));
                     ToggleButton button = MossRockActivity.getInstance().buttons.get(key);
+                    noEventSetChecked(button, checked);
+                }
+                if (MossRockActivity.getInstance().scenes.containsKey(key)) {
+                    boolean checked = json.getBoolean(key);
+                    Log.i(TAG, "Setting button " + key + " to " + (checked ? "on" : "off"));
+                    ToggleButton button = (ToggleButton) MossRockActivity.getInstance().scenes.get(key);
                     noEventSetChecked(button, checked);
                 }
             }

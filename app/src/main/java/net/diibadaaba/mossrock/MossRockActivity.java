@@ -1,17 +1,11 @@
 package net.diibadaaba.mossrock;
 
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.RelativeSizeSpan;
-import android.text.style.TypefaceSpan;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import java.util.LinkedHashMap;

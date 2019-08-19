@@ -1,18 +1,10 @@
 package net.diibadaaba.mossrock;
 
-import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
-
-import com.github.mob41.blapi.RM2Device;
-import com.github.mob41.blapi.mac.Mac;
-import com.github.mob41.blapi.pkt.cmd.rm2.SendDataCmdPayload;
-import static com.github.mob41.blapi.HexUtil.bytes2hex;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -22,17 +14,11 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com.github.mob41.blapi.HexUtil.bytes2hex;
 import static java.net.InetAddress.getByName;
 
 public class ITGWActions implements ActionRegistrar {
@@ -42,37 +28,13 @@ public class ITGWActions implements ActionRegistrar {
     private final AtomicBoolean ackLock = new AtomicBoolean(false);
     private Thread receiver;
     private Thread sender;
-    private Thread irSender;
     private HttpServer server;
-    byte[][] VOLUMES = new byte[][] {
-            IRCommands.HK_VOL_DOWN_30DB,
-            IRCommands.HK_VOL_DOWN_20DB,
-            IRCommands.HK_VOL_DOWN_10DB,
-            IRCommands.HK_VOL_DOWN_5DB,
-            null,
-            IRCommands.HK_VOL_UP_5DB,
-            IRCommands.HK_VOL_UP_10DB,
-            IRCommands.HK_VOL_UP_20DB,
-            IRCommands.HK_VOL_UP_30DB
-    };
     private static DatagramSocket GW_SOCKET;
     private static ITGWActions instance;
-    final BlockingQueue<byte[]> irQueue = new LinkedBlockingDeque<>();
-    private RM2Device dev;
     private static final Set<String> ampScenes = new HashSet<>(Arrays.asList("venom", "wii", "ps4", "steam"));
     private ToggleButton activeAmpScene;
 
-    private RM2Device getDev() {
-        if (dev == null) {
-            try {
-                dev = (RM2Device) RM2Device.discoverDevices(InetAddress.getByAddress(new byte[] {0,0,0,0}), 0, 0)[0];
-                dev.auth();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return dev;
-    }
+
     public  ITGWActions() {
         instance = this;
     }
@@ -207,28 +169,6 @@ public class ITGWActions implements ActionRegistrar {
             }
         }
     };
-    private final SeekBar.OnSeekBarChangeListener volumeListener = new SeekBar.OnSeekBarChangeListener() {
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
-        }
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-
-        }
-        @Override
-        public void onStopTrackingTouch(final SeekBar seekBar) {
-            int progress = seekBar.getProgress();
-            if (VOLUMES[progress] != null) {
-                try {
-                    irQueue.put(VOLUMES[progress]);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            seekBar.setProgress(4);
-        }
-    };
     private class Sender implements Runnable {
         @Override
         public void run() {
@@ -251,27 +191,7 @@ public class ITGWActions implements ActionRegistrar {
             }
         }
     }
-    private class IRSender implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                byte[] next = null;
-                try {
-                    next = irQueue.poll(1, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                }
-                if (next != null && next.length > 0) {
-                    try {
-                        RM2Device dev = getDev();
-                        Log.i(TAG, "Sending " + bytes2hex(next));
-                        dev.sendCmdPkt(new SendDataCmdPayload(next));
-                    } catch (IOException e) {
-                        Log.i(TAG, "Failed to send IR command", e);
-                    }
-                }
-            }
-        }
-    }
+
     private class Receiver implements Runnable {
         byte[] buffer = new byte[256];
         @Override
@@ -342,7 +262,6 @@ public class ITGWActions implements ActionRegistrar {
         }
         receiver = new Thread(new Receiver());
         sender = new Thread(new Sender());
-        irSender = new Thread(new IRSender());
         receiver.start();
         sender.start();
         irSender.start();
