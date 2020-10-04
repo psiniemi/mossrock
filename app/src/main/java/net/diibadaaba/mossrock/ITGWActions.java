@@ -183,6 +183,8 @@ public class ITGWActions implements ActionRegistrar {
         setSeekBar(activity.seekBars.get("viggo"), activity.buttons.get("viggo"));
         setSeekBar(activity.seekBars.get("nuutti"), activity.buttons.get("nuutti"));
         setSeekBar(activity.seekBars.get("venni"), activity.buttons.get("venni"));
+        setSeekBar(activity.seekBars.get("entry"), activity.buttons.get("entry"));
+        setSeekBar(activity.seekBars.get("hallway"), activity.buttons.get("hallway"));
         setSeekBar(activity.seekBars.get("balcony"), activity.buttons.get("balcony"));
         setSeekBar(activity.seekBars.get("library"), activity.buttons.get("library"));
         ((Button)activity.scenes.get("all_on")).setOnClickListener(allOn);
