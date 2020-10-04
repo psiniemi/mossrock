@@ -45,6 +45,8 @@ public class MossRockActivity extends AppCompatActivity {
         seekBars.put("viggo", findViewById(R.id.viggo_dim));
         seekBars.put("nuutti", findViewById(R.id.nuutti_dim));
         seekBars.put("venni", findViewById(R.id.venni_dim));
+        seekBars.put("entry", findViewById(R.id.entry_dim));
+        seekBars.put("hallway", findViewById(R.id.hallway_dim));
         seekBars.put("balcony", findViewById(R.id.balcony_dim));
         seekBars.put("library", findViewById(R.id.library_dim));
         scenes.put("all_on", findViewById(R.id.all_on));
